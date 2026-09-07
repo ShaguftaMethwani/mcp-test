@@ -45,7 +45,7 @@ GOOGLE_DOC_ID: str = _require("GOOGLE_DOC_ID")
 # ── Optional (with sensible defaults) ────────────────────────────────────────
 
 # Groq model name
-GROQ_MODEL: str = _optional("GROQ_MODEL", "llama-3.1-70b-versatile")
+GROQ_MODEL: str = _optional("GROQ_MODEL", "openai/gpt-oss-120b")
 
 # Groww Play Store package ID
 APP_ID: str = _optional("APP_ID", "com.nextbillion.groww")
