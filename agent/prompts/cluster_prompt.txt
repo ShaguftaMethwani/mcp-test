@@ -5,12 +5,14 @@ You will be given a list of user reviews. Your job is to:
 2. Rank themes by the number of reviews that belong to them (highest count first).
 3. Select exactly 3 verbatim quotes — one per top theme.
 4. Generate exactly 3 concrete, actionable improvement ideas grounded in the themes.
+5. Identify if any theme relates to user confusion about a FEE or CHARGE (e.g., exit load, brokerage, DP charges, AMC fees, transaction fees, stamp duty, STT, GST, platform fees). If found, output the fee_confusion object. If no fee/charge confusion exists, set fee_confusion to null.
 
 === STRICT RULES ===
 - Themes must be distinct and non-overlapping.
 - Maximum 5 themes. Do not exceed this.
 - Quotes MUST be copied VERBATIM (word-for-word) from the review text below. Do NOT paraphrase, summarise, or alter any quote. Copy the exact text.
 - Action ideas must reference a specific identified theme. Generic advice like "improve UX" is not acceptable.
+- fee_confusion must either be null or an object with the exact keys shown below. Do NOT fabricate a fee issue if none exists in the reviews.
 - Output ONLY a single valid JSON object. No markdown fences, no explanation text, no commentary before or after the JSON.
 
 === OUTPUT FORMAT (JSON only) ===
@@ -28,8 +30,15 @@ You will be given a list of user reviews. Your job is to:
     "<specific, actionable improvement idea tied to theme 1>",
     "<specific, actionable improvement idea tied to theme 2>",
     "<specific, actionable improvement idea tied to theme 3>"
-  ]
+  ],
+  "fee_confusion": {
+    "fee_name": "<name of the fee/charge users are confused about>",
+    "user_pain": "<1-2 sentence description of what users misunderstand or complain about>",
+    "related_theme": "<name of the theme this confusion belongs to>"
+  }
 }
+
+NOTE: If no reviews mention confusion about any fee or charge, set "fee_confusion": null
 
 === REVIEWS ===
 {reviews}

@@ -3,9 +3,9 @@ agent/agent.py
 
 Phase 5 — LangChain Orchestrator
 ==================================
-Wires all five tools (ingest, cluster, pulse, docs, gmail) into a single
-LangChain ReAct agent that executes the full weekly-pulse pipeline
-end-to-end from a single trigger.
+Wires all seven tools (ingest, cluster, pulse, fee explainer, approval gate,
+docs, gmail) into a single LangChain ReAct agent that executes the full
+weekly-pulse pipeline end-to-end from a single trigger.
 
 Public API
 ----------
@@ -26,6 +26,8 @@ from langchain_groq import ChatGroq
 from agent.tools.ingest_reviews import ingest_reviews_tool
 from agent.tools.thematic_engine import cluster_and_summarize_tool
 from agent.tools.pulse_builder import build_pulse_tool
+from agent.tools.fee_explainer import fee_explainer_tool
+from agent.tools.approval_gate import approval_gate_tool
 from agent.tools.remote_mcp_tools import google_docs_append_tool, gmail_create_draft_tool
 
 logger = logging.getLogger(__name__)
@@ -49,8 +51,8 @@ STEP 1 — INGEST REVIEWS
 STEP 2 — CLUSTER & SUMMARIZE
   Call the `cluster_and_summarize_tool` tool with the full list of reviews
   from Step 1.
-  This returns a dict with keys: themes, quotes, action_ideas.
-  Store this result for the next step.
+  This returns a dict with keys: themes, quotes, action_ideas, fee_confusion.
+  Store this result for the next steps.
 
 STEP 3 — BUILD PULSE
   Call the `build_pulse_tool` tool with:
@@ -60,21 +62,38 @@ STEP 3 — BUILD PULSE
     - date_range: "{date_range}"
   This returns a formatted pulse note string. Store it for the next steps.
 
-STEP 4 — APPEND TO GOOGLE DOC
-  Call the `google_docs_append_tool` tool with:
-    - content: the pulse note string from Step 3
-  The pulse is appended to the configured rolling Google Doc.
+STEP 4 — FEE EXPLAINER
+  If fee_confusion from Step 2 is NOT null:
+    Call the `fee_explainer_tool` tool with:
+      - fee_confusion: the fee_confusion dict from Step 2
+    Store the returned fee explanation string.
+  If fee_confusion is null:
+    Skip this step. Set fee_explanation to "No fee confusion was identified in the reviews."
 
-STEP 5 — CREATE GMAIL DRAFT
+STEP 5 — APPROVAL GATE
+  Combine the pulse note from Step 3 and the fee explanation from Step 4
+  into a single preview string (pulse first, then fee explanation separated by a blank line).
+  Call the `approval_gate_tool` tool with:
+    - preview: the combined preview string
+  If the result is "rejected", stop and report "Pipeline halted: user rejected MCP actions."
+  If the result is "approved", continue to Step 6.
+
+STEP 6 — APPEND TO GOOGLE DOC
+  Call the `google_docs_append_tool` tool with:
+    - content: the combined pulse note + fee explanation from Steps 3 and 4
+  The content is appended to the configured rolling Google Doc.
+
+STEP 7 — CREATE GMAIL DRAFT
   Call the `gmail_create_draft_tool` tool with:
-    - subject: "Weekly Play Store Review Pulse — {date_range}"
-    - body: the pulse note string from Step 3
+    - subject: "Weekly Play Store Review Pulse + Customer Clarification — {date_range}"
+    - body: the combined pulse note + fee explanation from Steps 3 and 4
     - doc_url: "https://docs.google.com/document/d/{google_doc_id}/edit"
   Report the draft confirmation message.
 
-After completing all 5 steps, provide a final summary listing:
+After completing all 7 steps, provide a final summary listing:
   - Number of reviews ingested
   - Number of themes identified
+  - Fee issue identified (or "None")
   - The Google Doc URL
   - The Gmail draft status
 """
@@ -102,6 +121,8 @@ ALL_TOOLS = [
     ingest_reviews_tool,
     cluster_and_summarize_tool,
     build_pulse_tool,
+    fee_explainer_tool,
+    approval_gate_tool,
     google_docs_append_tool,
     gmail_create_draft_tool,
 ]
@@ -116,7 +137,7 @@ def _compute_date_range(weeks: int) -> str:
 
 def build_agent():
     """
-    Construct the ReAct agent with all five pipeline tools using LangGraph.
+    Construct the ReAct agent with all seven pipeline tools using LangGraph.
 
     Returns a compiled LangGraph application.
     """
@@ -169,7 +190,8 @@ def run_pipeline() -> dict:
     trigger = (
         f"Run the complete weekly pulse pipeline for the Groww app. "
         f"Fetch the last {WEEKS_LOOKBACK} weeks of reviews, cluster them, "
-        f"build the pulse note, create a Google Doc, and draft a Gmail."
+        f"build the pulse note, generate a fee explainer if needed, "
+        f"request approval, then create a Google Doc and draft a Gmail."
     )
 
     logger.info("Triggering agent with: %s", trigger)

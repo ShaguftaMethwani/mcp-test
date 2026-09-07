@@ -128,6 +128,7 @@ def _validate_output(result: dict, reviews: list[dict]) -> dict:
     - Themes: max MAX_THEMES, each has name/summary/count
     - Quotes: exactly NUM_QUOTES, each must be a verbatim substring of some review
     - Action ideas: exactly NUM_ACTIONS
+    - Fee confusion: optional dict with fee_name, user_pain, related_theme (or None)
 
     Returns the validated (and possibly trimmed) result dict.
     """
@@ -201,6 +202,23 @@ def _validate_output(result: dict, reviews: list[dict]) -> dict:
             actions.append("Investigate the identified theme and address top user pain points.")
     result["action_ideas"] = [str(a) for a in actions[:NUM_ACTIONS]]
 
+    # ── Fee confusion (optional) ──────────────────────────────────────────────
+    fee_confusion = result.get("fee_confusion", None)
+    if fee_confusion is not None and isinstance(fee_confusion, dict):
+        result["fee_confusion"] = {
+            "fee_name":      str(fee_confusion.get("fee_name", "Unknown fee")),
+            "user_pain":     str(fee_confusion.get("user_pain", "")),
+            "related_theme": str(fee_confusion.get("related_theme", "")),
+        }
+        logger.info(
+            "Fee confusion detected: '%s' (theme: '%s')",
+            result["fee_confusion"]["fee_name"],
+            result["fee_confusion"]["related_theme"],
+        )
+    else:
+        result["fee_confusion"] = None
+        logger.info("No fee/charge confusion detected in reviews.")
+
     return result
 
 
@@ -243,6 +261,7 @@ def _merge_batch_results(batch_results: list[dict], all_reviews: list[dict]) -> 
     theme_map: dict[str, dict] = {}
     all_quotes: list[str] = []
     all_actions: list[str] = []
+    fee_confusion = None  # Keep the first non-null fee_confusion across batches
 
     for batch in batch_results:
         for theme in batch.get("themes", []):
@@ -257,6 +276,9 @@ def _merge_batch_results(batch_results: list[dict], all_reviews: list[dict]) -> 
                 }
         all_quotes.extend(batch.get("quotes", []))
         all_actions.extend(batch.get("action_ideas", []))
+        # Preserve the first fee_confusion found across batches
+        if fee_confusion is None and batch.get("fee_confusion") is not None:
+            fee_confusion = batch["fee_confusion"]
 
     # Re-rank themes
     merged_themes = sorted(theme_map.values(), key=lambda t: t["count"], reverse=True)[:MAX_THEMES]
@@ -287,6 +309,7 @@ def _merge_batch_results(batch_results: list[dict], all_reviews: list[dict]) -> 
         "themes":       merged_themes,
         "quotes":       deduped_quotes[:NUM_QUOTES],
         "action_ideas": deduped_actions[:NUM_ACTIONS],
+        "fee_confusion": fee_confusion,
     }
     return _validate_output(merged, all_reviews)
 
@@ -311,6 +334,7 @@ def cluster_and_summarize(reviews: list[dict]) -> dict:
           "themes":       [{"name", "summary", "count"}, ...],   # ≤5, ranked
           "quotes":       [str, str, str],                        # 3 verbatim
           "action_ideas": [str, str, str],                        # 3 actionable
+          "fee_confusion": {"fee_name", "user_pain", "related_theme"} | None
         }
 
     Raises:
@@ -319,7 +343,7 @@ def cluster_and_summarize(reviews: list[dict]) -> dict:
     """
     if not reviews:
         logger.warning("cluster_and_summarize called with 0 reviews.")
-        return {"themes": [], "quotes": [], "action_ideas": []}
+        return {"themes": [], "quotes": [], "action_ideas": [], "fee_confusion": None}
 
     llm = build_llm()
     prompt_template = _load_prompt_template()
@@ -349,9 +373,10 @@ def cluster_and_summarize(reviews: list[dict]) -> dict:
         logger.info("Merging %d batch results...", len(batch_results))
         final = _merge_batch_results(batch_results, reviews)
 
+    fee_status = final.get("fee_confusion", {}).get("fee_name", "none") if final.get("fee_confusion") else "none"
     logger.info(
-        "Clustering complete: %d themes, %d quotes, %d action ideas.",
-        len(final["themes"]), len(final["quotes"]), len(final["action_ideas"])
+        "Clustering complete: %d themes, %d quotes, %d action ideas, fee_confusion=%s.",
+        len(final["themes"]), len(final["quotes"]), len(final["action_ideas"]), fee_status
     )
     return final
 
@@ -366,8 +391,8 @@ def cluster_and_summarize_tool(reviews: list[dict]) -> dict:
     Cluster Groww Play Store reviews into themes using the Groq LLM.
 
     Use this tool after ingesting reviews. It groups them into ≤5 meaningful
-    themes, selects 3 verbatim user quotes, and generates 3 actionable
-    improvement ideas.
+    themes, selects 3 verbatim user quotes, generates 3 actionable
+    improvement ideas, and identifies any fee/charge-related confusion.
 
     Args:
         reviews: List of review dicts (from ingest_reviews_tool).
@@ -375,8 +400,9 @@ def cluster_and_summarize_tool(reviews: list[dict]) -> dict:
 
     Returns:
         Dict with keys:
-          themes       — list of {"name", "summary", "count"} (≤5, ranked)
-          quotes       — list of 3 verbatim review text excerpts
-          action_ideas — list of 3 concrete improvement suggestions
+          themes        — list of {"name", "summary", "count"} (≤5, ranked)
+          quotes        — list of 3 verbatim review text excerpts
+          action_ideas  — list of 3 concrete improvement suggestions
+          fee_confusion — dict with {"fee_name", "user_pain", "related_theme"} or null
     """
     return cluster_and_summarize(reviews)

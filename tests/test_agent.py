@@ -25,13 +25,15 @@ EXPECTED_TOOL_NAMES = {
     "ingest_reviews_tool",
     "cluster_and_summarize_tool",
     "build_pulse_tool",
+    "fee_explainer_tool",
+    "approval_gate_tool",
     "google_docs_append_tool",
     "gmail_create_draft_tool",
 }
 
 
 def test_all_tools_registered():
-    """ALL_TOOLS must contain exactly the 5 expected tools."""
+    """ALL_TOOLS must contain exactly the 7 expected tools."""
     actual_names = {t.name for t in ALL_TOOLS}
     assert actual_names == EXPECTED_TOOL_NAMES, (
         f"Expected tools {EXPECTED_TOOL_NAMES}, got {actual_names}"
@@ -39,8 +41,8 @@ def test_all_tools_registered():
 
 
 def test_all_tools_count():
-    """There must be exactly 5 tools."""
-    assert len(ALL_TOOLS) == 5
+    """There must be exactly 7 tools."""
+    assert len(ALL_TOOLS) == 7
 
 
 def test_tools_have_descriptions():
@@ -64,9 +66,22 @@ def test_system_prompt_mentions_all_tools():
 
 
 def test_system_prompt_has_all_steps():
-    """The system prompt must contain all 5 pipeline steps."""
-    for step in ["STEP 1", "STEP 2", "STEP 3", "STEP 4", "STEP 5"]:
+    """The system prompt must contain all 7 pipeline steps."""
+    for step in ["STEP 1", "STEP 2", "STEP 3", "STEP 4", "STEP 5", "STEP 6", "STEP 7"]:
         assert step in SYSTEM_PROMPT, f"System prompt is missing '{step}'"
+
+
+def test_system_prompt_mentions_fee_explainer():
+    """The system prompt must reference the fee explainer step."""
+    assert "fee_explainer_tool" in SYSTEM_PROMPT
+    assert "fee_confusion" in SYSTEM_PROMPT
+
+
+def test_system_prompt_mentions_approval_gate():
+    """The system prompt must reference the approval gate step."""
+    assert "approval_gate_tool" in SYSTEM_PROMPT
+    assert "rejected" in SYSTEM_PROMPT.lower()
+    assert "approved" in SYSTEM_PROMPT.lower()
 
 
 # ─────────────────────────────────────────────────────────────────────────────

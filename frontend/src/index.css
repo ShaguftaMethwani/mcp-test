@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surface-container-highest: #2d3449;
+  --color-outline-variant: #464554;
+  --color-surface-container: #171f33;
+  --color-primary-fixed-dim: #c0c1ff;
+  --color-surface-container-lowest: #060e20;
+  --color-secondary-container: #571bc1;
+  --color-on-primary-container: #0d0096;
+  --color-outline: #908fa0;
+  --color-error-container: #93000a;
+  --color-on-secondary-fixed: #23005c;
+  --color-on-secondary-fixed-variant: #5516be;
+  --color-on-primary: #1000a9;
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-surface: #0b1326;
+  --color-on-surface: #dae2fd;
+  --color-surface-tint: #c0c1ff;
+  --color-inverse-on-surface: #283044;
+  --color-on-tertiary-fixed: #002113;
+  --color-surface-container-high: #222a3d;
+  --color-on-surface-variant: #c7c4d7;
+  --color-primary: #c0c1ff;
+  --color-tertiary-fixed-dim: #4edea3;
+  --color-on-secondary: #3c0091;
+  --color-primary-container: #8083ff;
+  --color-secondary-fixed-dim: #d0bcff;
+  --color-on-primary-fixed: #07006c;
+  --color-background: #0b1326;
+  --color-surface-dim: #0b1326;
+  --color-on-tertiary: #003824;
+  --color-on-tertiary-fixed-variant: #005236;
+  --color-tertiary-fixed: #6ffbbe;
+  --color-secondary: #d0bcff;
+  --color-tertiary: #4edea3;
+  --color-surface-variant: #2d3449;
+  --color-on-secondary-container: #c4abff;
+  --color-on-tertiary-container: #000703;
+  --color-inverse-surface: #dae2fd;
+  --color-secondary-fixed: #e9ddff;
+  --color-on-background: #dae2fd;
+  --color-on-primary-fixed-variant: #2f2ebe;
+  --color-inverse-primary: #494bd6;
+  --color-tertiary-container: #00885d;
+  --color-surface-bright: #31394d;
+  --color-surface-container-low: #131b2e;
+  --color-on-error-container: #ffdad6;
+  --color-primary-fixed: #e1e0ff;
+
+  --spacing-stack-xxs: 0.125rem;
+  --spacing-stack-xs: 0.25rem;
+  --spacing-stack-sm: 0.5rem;
+  --spacing-stack-md: 0.75rem;
+  --spacing-stack-lg: 1rem;
+  --spacing-stack-xl: 1.5rem;
+  --spacing-stack-2xl: 2rem;
+  --spacing-stack-3xl: 3rem;
+  --spacing-layout-margin-mobile: 0.75rem;
+  --spacing-layout-margin-tablet: 1rem;
+  --spacing-layout-margin-desktop: 1.5rem;
+  --spacing-panel-gutter: 0.75rem;
+
+  --font-code-sm: "JetBrains Mono", monospace;
+  --font-code-md: "JetBrains Mono", monospace;
+  --font-display-hero: "Plus Jakarta Sans", sans-serif;
+  --font-display-hero-mobile: "Plus Jakarta Sans", sans-serif;
+  --font-headline-xl: "Plus Jakarta Sans", sans-serif;
+  --font-headline-lg: "Plus Jakarta Sans", sans-serif;
+  --font-headline-md: "Plus Jakarta Sans", sans-serif;
+  --font-body-lg: "Geist", sans-serif;
+  --font-body-md: "Geist", sans-serif;
+  --font-body-sm: "Geist", sans-serif;
+  --font-label-md: "Geist", sans-serif;
+  --font-label-sm: "Geist", sans-serif;
+  
+  --text-code-sm: 11px;
+  --text-code-sm--line-height: 16px;
+  --text-code-sm--font-weight: 400;
+
+  --text-code-md: 12px;
+  --text-code-md--line-height: 18px;
+  --text-code-md--font-weight: 400;
+
+  --text-display-hero: 36px;
+  --text-display-hero--line-height: 44px;
+  --text-display-hero--font-weight: 700;
+  --text-display-hero--letter-spacing: -0.025em;
+
+  --text-display-hero-mobile: 28px;
+  --text-display-hero-mobile--line-height: 36px;
+  --text-display-hero-mobile--font-weight: 700;
+  --text-display-hero-mobile--letter-spacing: -0.02em;
+
+  --text-headline-xl: 28px;
+  --text-headline-xl--line-height: 36px;
+  --text-headline-xl--font-weight: 600;
+  --text-headline-xl--letter-spacing: -0.02em;
+
+  --text-headline-lg: 22px;
+  --text-headline-lg--line-height: 28px;
+  --text-headline-lg--font-weight: 600;
+  --text-headline-lg--letter-spacing: -0.015em;
+
+  --text-headline-md: 18px;
+  --text-headline-md--line-height: 24px;
+  --text-headline-md--font-weight: 600;
+  --text-headline-md--letter-spacing: -0.01em;
+
+  --text-body-lg: 15px;
+  --text-body-lg--line-height: 24px;
+  --text-body-lg--font-weight: 400;
+  --text-body-lg--letter-spacing: -0.005em;
+
+  --text-body-md: 13px;
+  --text-body-md--line-height: 20px;
+  --text-body-md--font-weight: 400;
+
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 18px;
+  --text-body-sm--font-weight: 400;
+  --text-body-sm--letter-spacing: 0.005em;
+
+  --text-label-md: 12px;
+  --text-label-md--line-height: 16px;
+  --text-label-md--font-weight: 500;
+  --text-label-md--letter-spacing: 0.01em;
+
+  --text-label-sm: 11px;
+  --text-label-sm--line-height: 14px;
+  --text-label-sm--font-weight: 600;
+  --text-label-sm--letter-spacing: 0.04em;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: rgba(6, 14, 32, 0.4);
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(144, 143, 160, 0.25);
+  border-radius: 4px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(192, 193, 255, 0.4);
+}
+.ambient-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+}
+.active-glow-pulse {
+  box-shadow: 0 0 16px -2px rgba(192, 193, 255, 0.15);
+}

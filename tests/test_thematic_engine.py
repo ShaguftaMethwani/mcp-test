@@ -45,7 +45,8 @@ def test_extract_json_valid():
 {
   "themes": [{"name": "Bugs", "summary": "Fix them", "count": 10}],
   "quotes": ["This is review number 0."],
-  "action_ideas": ["Fix bugs"]
+  "action_ideas": ["Fix bugs"],
+  "fee_confusion": null
 }
 ```'''
     res = _extract_json(raw)
@@ -62,6 +63,7 @@ def test_validate_truncates_themes():
         ],
         "quotes": [reviews[0]["text"]] * 3,
         "action_ideas": ["Action 1", "Action 2", "Action 3"],
+        "fee_confusion": None,
     }
     validated = _validate_output(result, reviews)
     assert len(validated["themes"]) == 5
@@ -74,7 +76,7 @@ def test_retry_on_malformed_json(MockChatGroq):
     mock_llm = MagicMock()
     mock_llm.invoke.side_effect = [
         AIMessage(content="{ invalid json"),
-        AIMessage(content='{"themes": [{"name": "Good", "summary": "...", "count": 1}], "quotes": ["Review 0."], "action_ideas": ["Action 1", "Action 2", "Action 3"]}'),
+        AIMessage(content='{"themes": [{"name": "Good", "summary": "...", "count": 1}], "quotes": ["Review 0."], "action_ideas": ["Action 1", "Action 2", "Action 3"], "fee_confusion": null}'),
     ]
     MockChatGroq.return_value = mock_llm
 
@@ -108,6 +110,7 @@ def test_fewer_quotes_accepted():
         "themes": [{"name": "Bugs", "summary": "...", "count": 3}],
         "quotes": ["Bad app.", "Slow app."], # missing one
         "action_ideas": ["A", "B", "C"],
+        "fee_confusion": None,
     }
     validated = _validate_output(result, reviews)
     assert len(validated["quotes"]) == 3
@@ -118,7 +121,7 @@ def test_fewer_quotes_accepted():
 def test_empty_reviews_list():
     """U-TE-06: Empty reviews list passed in → Short circuit."""
     result = cluster_and_summarize([])
-    assert result == {"themes": [], "quotes": [], "action_ideas": []}
+    assert result == {"themes": [], "quotes": [], "action_ideas": [], "fee_confusion": None}
 
 
 def test_non_verbatim_quote_rejected():
@@ -128,11 +131,58 @@ def test_non_verbatim_quote_rejected():
         "themes": [{"name": "Bugs", "summary": "...", "count": 2}],
         "quotes": ["Review A.", "Review Fake.", "Review B."], # 'Review Fake.' is fake
         "action_ideas": ["A", "B", "C"],
+        "fee_confusion": None,
     }
     validated = _validate_output(result, reviews)
     assert len(validated["quotes"]) == 3
     assert "Review Fake." not in validated["quotes"]
     assert "Review C fallback." in validated["quotes"]
+
+
+# ─── Fee confusion validation tests ──────────────────────────────────────────
+
+def test_validate_fee_confusion_valid():
+    """Valid fee_confusion dict is preserved."""
+    reviews = _make_reviews(1)
+    result = {
+        "themes": [{"name": "Pricing", "summary": "...", "count": 1}],
+        "quotes": [reviews[0]["text"]] * 3,
+        "action_ideas": ["A", "B", "C"],
+        "fee_confusion": {
+            "fee_name": "Exit Load",
+            "user_pain": "Users surprised by exit load",
+            "related_theme": "Pricing",
+        },
+    }
+    validated = _validate_output(result, reviews)
+    assert validated["fee_confusion"] is not None
+    assert validated["fee_confusion"]["fee_name"] == "Exit Load"
+
+
+def test_validate_fee_confusion_null():
+    """Null fee_confusion is preserved as None."""
+    reviews = _make_reviews(1)
+    result = {
+        "themes": [{"name": "Bugs", "summary": "...", "count": 1}],
+        "quotes": [reviews[0]["text"]] * 3,
+        "action_ideas": ["A", "B", "C"],
+        "fee_confusion": None,
+    }
+    validated = _validate_output(result, reviews)
+    assert validated["fee_confusion"] is None
+
+
+def test_validate_fee_confusion_missing_key():
+    """Missing fee_confusion key defaults to None."""
+    reviews = _make_reviews(1)
+    result = {
+        "themes": [{"name": "Bugs", "summary": "...", "count": 1}],
+        "quotes": [reviews[0]["text"]] * 3,
+        "action_ideas": ["A", "B", "C"],
+        # No fee_confusion key at all
+    }
+    validated = _validate_output(result, reviews)
+    assert validated["fee_confusion"] is None
 
 
 # ─── 4.2 Integration Tests — LLM Quality ──────────────────────────────────────
@@ -164,3 +214,6 @@ def test_live_clustering():
     all_texts = [r["text"] for r in reviews]
     for q in quotes:
         assert any(q in t for t in all_texts), f"Quote not verbatim: {q}"
+
+    # Fee confusion should be present as a key (may be null or a dict)
+    assert "fee_confusion" in result
