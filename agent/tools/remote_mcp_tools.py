@@ -24,7 +24,7 @@ async def _call_remote_mcp(tool_name: str, arguments: dict) -> str:
     from config.settings import REMOTE_MCP_URL
     
     try:
-        async with streamable_http_client(url=REMOTE_MCP_URL) as (read, write):
+        async with streamable_http_client(url=REMOTE_MCP_URL) as (read, write, _):
             async with ClientSession(read, write) as session:
                 await session.initialize()
                 
