@@ -37,8 +37,8 @@ _PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "cluster_pro
 
 # ── Batching config ───────────────────────────────────────────────────────────
 # llama3-70b-8192 has an 8192-token context window on Groq's free tier.
-# We stay well under by limiting each batch to ~150 reviews (~4000 tokens).
-MAX_REVIEWS_PER_BATCH = 150
+# We stay well under by limiting each batch to ~50 reviews (~2500 tokens).
+MAX_REVIEWS_PER_BATCH = 50
 
 # ── Output constraints ────────────────────────────────────────────────────────
 MAX_THEMES = 5
