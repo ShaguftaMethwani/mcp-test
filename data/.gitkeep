@@ -1,0 +1,4 @@
+# Place your Play Store CSV export here.
+# Export from: Google Play Console → Reviews → Export reviews
+# File name should match PLAY_STORE_CSV_PATH in your .env (default: playstore_reviews.csv)
+# This directory is excluded from git to protect review data.

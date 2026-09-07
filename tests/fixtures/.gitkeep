@@ -1,0 +1,3 @@
+# tests/fixtures/.gitkeep
+# Place test fixture CSV files here (e.g. valid_reviews.csv, mixed_dates.csv)
+# See docs/eval.md for the full list of required fixtures.

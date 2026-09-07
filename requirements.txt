@@ -1,0 +1,19 @@
+# Core LangChain
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-groq>=0.1.0           # ChatGroq (Groq)
+langchain-mcp-adapters>=0.1.0   # MCP ↔ LangChain bridge
+
+# Data
+pandas>=2.0.0
+google-play-scraper>=1.2.0      # Fetch public Play Store reviews (no auth needed)
+
+# Environment & config
+python-dotenv>=1.0.0
+
+# MCP protocol runtime
+mcp>=1.0.0
+
+# Testing
+pytest>=7.0.0
+tenacity>=8.0.0                 # Retry logic for LLM / MCP calls
